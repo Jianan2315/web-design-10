@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
-import axios from '../../api'; // Assuming api.js is configured in src/services
+import { useDispatch } from 'react-redux';
+import { login } from '../../redux/authSlice';
+import axios from '../../api';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+    const dispatch = useDispatch();
+    const navigate = useNavigate(); // Hook for navigation
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
@@ -10,10 +15,17 @@ const Login = () => {
         e.preventDefault();
         try {
             const response = await axios.post('/user/login', { email, password });
-            setMessage(`Login successful: ${response.data.message}`);
-            // Handle successful login, e.g., store token or redirect user
+            dispatch(login(response.data.user)); // Save user details in Redux
+            setMessage('Login successful');
+
+            // Navigate based on user type
+            if (response.data.user.type === 'admin') {
+                navigate('/admin/employees'); // Redirect admin to Employees page
+            } else if (response.data.user.type === 'employee') {
+                navigate('/jobs'); // Redirect employee to Jobs page
+            }
         } catch (error) {
-            setMessage('Login failed. Please check your credentials and try again.');
+            setMessage('Login failed. Please check your credentials.');
             console.error('Error logging in:', error);
         }
     };
