@@ -6,28 +6,22 @@ const path = require('path');
 // Create User
 exports.createUser = async (req, res) => {
     try {
-        const { fullName, email, password } = req.body;
+        const { fullName, email, password, type } = req.body;
 
-        // Validate input
-        if (!email || !fullName || !password) {
-            return res.status(400).json({ message: 'All fields are required.',
-                input: {useremail:email || "empty",username:fullName || "empty",userpwd:password || "empty"},
-                failure: true});
+        if (!email || !fullName || !password || !type) {
+            return res.status(400).json({ message: 'All fields are required.' });
         }
 
-        // Example password validation
-        if (password.length < 8) {
-            return res.status(400).json({ message: 'Password must be at least 8 characters long.' });
+        if (!['employee', 'admin'].includes(type)) {
+            return res.status(400).json({ message: 'Type must be "employee" or "admin".' });
         }
 
-        // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: 'Email is already in use.' });
         }
 
-        // Create a new user
-        const user = new User({ fullName, email, password });
+        const user = new User({ fullName, email, password, type });
         await user.save();
         res.status(201).json({ message: 'User created successfully', user });
     } catch (error) {
